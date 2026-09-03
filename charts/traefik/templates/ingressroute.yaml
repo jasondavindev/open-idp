@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-test
+  namespace: traefik
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`nginx.k8s.com`) && PathPrefix(`/`)
+      services:
+        - kind: Service
+          name: nginx-service
+          port: 80
