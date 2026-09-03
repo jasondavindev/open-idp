@@ -1,0 +1,15 @@
+apiVersion: v2
+name: otel
+description: >
+  Chart wrapper para instalar o OpenTelemetry Collector como DaemonSet,
+  configurado para coletar apenas logs dos pods (via filelog receiver).
+type: application
+version: 1.0.0
+appVersion: "0.172.0"
+
+# Dependência da chart oficial do OpenTelemetry Collector.
+# Repositório: https://github.com/open-telemetry/opentelemetry-helm-charts
+dependencies:
+  - name: opentelemetry-collector
+    version: "0.172.0"
+    repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"

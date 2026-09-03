@@ -1,0 +1,65 @@
+opentelemetry-collector:
+  mode: daemonset
+  image:
+    repository: otel/opentelemetry-collector-contrib
+  command:
+    name: otelcol-contrib
+  presets:
+    logsCollection:
+      enabled: true
+      includeCollectorLogs: false
+      storeCheckpoints: true
+  config:
+    receivers:
+      otlp: null
+      jaeger: null
+      zipkin: null
+      prometheus: null
+    exporters:
+      debug: {}
+      otlphttp:
+        endpoint: localhost
+      elasticsearch:
+        endpoints:
+          - "http://10.96.30.134:9200"
+        mapping:
+          allowed_modes:
+            - ecs
+    processors:
+      transform/elastic_mapping:
+        log_statements:
+          - context: scope
+            statements:
+              - 'set(attributes["elastic.mapping.mode"], "ecs")'
+    service:
+      pipelines:
+        traces: null
+        metrics: null
+        logs:
+          receivers: []
+          processors:
+            - memory_limiter
+            - batch
+          exporters:
+            - elasticsearch
+            - debug
+  ports:
+    otlp:
+      enabled: false
+    otlp-http:
+      enabled: false
+    jaeger-compact:
+      enabled: false
+    jaeger-thrift:
+      enabled: false
+    jaeger-grpc:
+      enabled: false
+    zipkin:
+      enabled: false
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
