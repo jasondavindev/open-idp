@@ -1,0 +1,5 @@
+grafana:
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://k8s.com/grafana/"
+      serve_from_sub_path: true

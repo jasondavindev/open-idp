@@ -1,0 +1,71 @@
+elasticsearch:
+  clusterName: "es-standalone"
+  nodeGroup: "master"
+
+  replicas: 1
+  minimumMasterNodes: 1
+
+  image: "docker.elastic.co/elasticsearch/elasticsearch"
+  imageTag: "8.17.4"
+
+  roles:
+    - master
+    - data
+    - data_content
+    - data_hot
+    - data_warm
+    - data_cold
+    - ingest
+    - ml
+    - remote_cluster_client
+    - transform
+
+  esConfig:
+    elasticsearch.yml: |
+      xpack.security.enabled: false
+      xpack.security.transport.ssl.enabled: false
+      xpack.security.http.ssl.enabled: false
+
+  esJavaOpts: "-Xmx1g -Xms1g"
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+
+  volumeClaimTemplate:
+    accessModes: ["ReadWriteOnce"]
+    resources:
+      requests:
+        storage: 20Gi
+
+  antiAffinity: "soft"
+
+  service:
+    type: ClusterIP
+    port: 9200
+
+  readinessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+
+  podDisruptionBudget:
+    enabled: false
+
+  ingress:
+    enabled: false
+
+  tests:
+    enabled: false
+
+  protocol: http
+  createCert: false
+
+  persistence:
+    enabled: false
