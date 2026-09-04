@@ -1,0 +1,26 @@
+argo:
+  redis-ha:
+    enabled: false
+
+  controller:
+    replicas: 1
+
+  server:
+    autoscaling:
+      enabled: false
+
+  repoServer:
+    autoscaling:
+      enabled: false
+
+  applicationSet:
+    replicas: 0
+
+  notifications:
+    enabled: false
+
+  configs:
+    params:
+      server.insecure: true
+      server.basehref: "/argo"
+      server.rootpath: "/argo"

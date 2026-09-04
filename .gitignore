@@ -1,2 +1,2 @@
-charts/**/charts
-charts/**/Chart.lock
+**/charts
+**/Chart.lock

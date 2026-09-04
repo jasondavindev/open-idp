@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: argo
+  namespace: argo
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`k8s.com`) && PathPrefix(`/argo`)
+      services:
+        - kind: Service
+          name: argo-argocd-server
+          port: 80
