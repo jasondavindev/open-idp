@@ -9,3 +9,7 @@ dependencies:
     version: 10.7.1
     repository: oci://ghcr.io/argoproj/argo-helm
     alias: argo
+  - name: argocd-app-of-apps
+    version: 0.1.0
+    repository: file://../../charts/argocd-app-of-apps
+    alias: app-of-apps

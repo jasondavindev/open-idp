@@ -1,0 +1,56 @@
+{{- $ref := default "main" .Values.targetRevision }}
+{{- $appsPathPrefix := .Values.pathPrefix }}
+{{- $targetCluster := default "in-cluster" .Values.cluster }}
+
+{{- range $name, $app := .Values.applications }}
+
+{{- $repoURL := $.Values.repository }}
+{{- $repoPath := printf "%s/%s" $appsPathPrefix $name }}
+
+{{- $kind := default "helm" $app.kind }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $name }}
+  namespace: {{default "argo" $.Values.argoNamespace}}
+spec:
+  project: {{ $name }}
+  source:
+    repoURL: {{ $repoURL | quote }}
+    path: {{ $repoPath | quote }}
+    targetRevision: {{ $ref }}
+    {{- if eq (lower $kind) "helm" }}
+    helm:
+      parameters:
+        - name: global.name
+          value: {{ $name }}
+      valueFiles:
+        - values.yaml
+    {{- else if eq (lower $kind) "kustomize" }}
+    kustomize:
+      commonAnnotations:
+        kustomize/app: {{$name}}
+    {{- end }}
+  destination:
+    name: {{ $targetCluster }}
+    namespace: {{ $name }}
+  syncPolicy:
+    {{- if $app.disableAutoSync }}
+    automated:
+    {{- else }}
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    {{- end }}
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 1m
+---
+{{- end }}

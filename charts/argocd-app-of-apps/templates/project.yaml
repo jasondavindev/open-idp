@@ -1,0 +1,21 @@
+{{- range $name, $app := .Values.applications }}
+kind: AppProject
+apiVersion: argoproj.io/v1alpha1
+metadata:
+  name: {{ $name }}
+  namespace: {{default "argo" $.Values.namespace }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destinations:
+    - namespace: "*"
+      server: "*"
+  sourceRepos:
+    - "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  orphanedResources:
+    warn: false
+---
+{{- end }}

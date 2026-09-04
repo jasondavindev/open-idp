@@ -1,0 +1,4 @@
+repository: https://github.com/jasondavindev/open-idp.git
+pathPrefix: 01-applications
+
+applications: {}
