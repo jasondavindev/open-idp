@@ -25,6 +25,9 @@ argo:
       server.basehref: "/argo"
       server.rootpath: "/argo"
 
+  cm:
+    kustomize.buildOptions: "--enable-helm"
+
 app-of-apps:
   repository: https://github.com/jasondavindev/open-idp.git
   pathPrefix: 01-applications

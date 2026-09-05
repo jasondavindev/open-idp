@@ -1,4 +1,29 @@
-repository: https://github.com/jasondavindev/open-idp.git
-pathPrefix: 01-applications
+# Git repository that holds the application manifests.
+# repository: https://github.com/jasondavindev/open-idp.git
 
+# Directory inside the repository containing one folder per application.
+# Each Application reads from "<pathPrefix>/<application name>".
+# pathPrefix: 01-applications
+
+# Git revision (branch, tag or commit) tracked by every Application.
+# targetRevision: main
+
+# Argo CD destination cluster name (not the API server URL).
+# cluster: in-cluster
+
+# Namespace where the Application objects are created.
+# argoNamespace: argo
+
+# Namespace where the AppProject objects are created.
+# Keep it in sync with argoNamespace.
+# namespace: argo
+
+# Applications to generate, keyed by application name.
+# The name defines the source path, the AppProject and the destination namespace.
+#
+#   applications:
+#     traefik: {}                  # all defaults: Helm source, auto-sync enabled
+#     otel:
+#       kind: kustomize            # source renderer: "helm" (default) or "kustomize"
+#       disableAutoSync: true      # true = sync only on demand (no automated policy)
 applications: {}
