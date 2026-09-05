@@ -1,4 +1,4 @@
-# k8s-cluster
+# Open IdP
 
 Infrastructure for production workloads on Kubernetes, managed through a **GitOps flow** with Argo CD.
 
