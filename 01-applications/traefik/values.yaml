@@ -3,18 +3,15 @@ traefik:
     enabled: false
 
   gateway:
-    enabled: true
+    enabled: false
 
   gatewayClass:
-    enabled: true
+    enabled: false
 
   api:
     dashboard: true
     insecure: true
 
-  # -- Only dashboard & healthcheck IngressRoute are supported.
-  # It's recommended to create workloads CR outside of this Chart.
-  # @default -- See _values.yaml_
   ingressRoute:
     dashboard:
       enabled: true
@@ -29,7 +26,7 @@ traefik:
       allowCrossNamespace: true
 
     kubernetesGateway:
-      enabled: true
+      enabled: false
 
   log:
     format: json # @schema enum:["common", "json", null]; type:[string, null]; default: "common"
@@ -42,4 +39,8 @@ traefik:
   service:
     enabled: true
     spec:
-      type: ClusterIP
+      type: NodePort
+
+  ports:
+    web:
+      nodePort: 30080

@@ -1,0 +1,18 @@
+#   make cluster
+#   kind create cluster --config 00-local/kind/cluster.yaml
+#
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: open-idp
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.37.0
+    extraPortMappings:
+      # Traefik `web` entrypoint, Used by nginx config
+      # to proxy requests from k8s.com to the cluster
+      - containerPort: 30080
+        hostPort: 8081
+        listenAddress: "127.0.0.1"
+        protocol: TCP
+  # - role: worker
+  #   image: kindest/node:v1.37.0
