@@ -13,3 +13,7 @@ dependencies:
     version: 0.1.0
     repository: file://../../charts/argocd-app-of-apps
     alias: app-of-apps
+  - name: argocd-app-of-apps
+    version: 0.1.0
+    repository: file://../../charts/argocd-app-of-apps
+    alias: custom-apps

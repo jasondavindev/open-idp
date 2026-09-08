@@ -38,3 +38,11 @@ app-of-apps:
     elasticsearch: {}
     grafana: {}
     otel: {}
+
+custom-apps:
+  repository: https://github.com/jasondavindev/safplatform.git
+  pathPrefix: .idp
+  targetRevision: main
+
+  applications:
+    safplatform: {}
