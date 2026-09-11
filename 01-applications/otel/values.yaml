@@ -21,7 +21,7 @@ opentelemetry-collector:
         endpoint: localhost
       elasticsearch:
         endpoints:
-          - "http://10.96.30.134:9200"
+          - "http://es-standalone-master.elasticsearch.svc.cluster.local:9200"
         mapping:
           allowed_modes:
             - ecs

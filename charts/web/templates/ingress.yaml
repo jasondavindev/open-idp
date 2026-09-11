@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    kubernetes.io/ingress.class: traefik
+  labels:
+    {{ include "web.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`{{ .Values.route.host }}`) && PathPrefix(`{{ .Values.route.pathPrefix }}`)
+      services:
+        - name: {{ .Release.Name }}-web
+          port: 80

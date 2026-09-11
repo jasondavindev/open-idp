@@ -1,0 +1,66 @@
+name: web
+nameOverride: ""
+fullnameOverride: ""
+
+# key-value of non-sensitive env vars
+# env: {}
+
+image:
+  repository: web
+  tag: "" # replaced by CD pipeline
+
+# command + args
+# command: []
+
+# application ingress
+route:
+  host: k8s.com
+  pathPrefix: /
+
+# port to listen http connections
+port: 8080
+
+# pod resources
+memory: 100Mi
+cpu: 100m
+
+# scaling:
+#   min: 1
+#   max: 2
+#   target: 90
+
+# pdb configurations - only one field is allowed
+# pdb:
+  # maxUnavailable: 1
+  # minAvailable: 1
+
+livenessProbe:
+  failureThreshold: 5
+  initialDelaySeconds: 10
+  path: /healthz
+  periodSeconds: 5
+  timeoutSeconds: 5
+  # exec:
+  #   - cat
+  #   - /tmp/startup
+
+readinessProbe:
+  failureThreshold: 5
+  initialDelaySeconds: 10
+  path: /healthz
+  periodSeconds: 5
+  timeoutSeconds: 5
+  # exec:
+  #   - cat
+  #   - /tmp/startup
+
+startupProbe:
+  failureThreshold: 5
+  initialDelaySeconds: 1
+  path: /healthz
+  periodSeconds: 5
+  timeoutSeconds: 5
+  # exec:
+  #   - cat
+  #   - /tmp/startup
+

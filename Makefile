@@ -24,7 +24,7 @@ HELM_ARGO = helm upgrade --install argo $(ARGO_CHART) \
 	--reset-values --wait --timeout 10m
 
 .DEFAULT_GOAL := help
-.PHONY: help bootstrap preflight cluster deps argo-init argo wait-traefik proxy status down clean
+.PHONY: help bootstrap preflight cluster deps argo-init argo wait-traefik proxy status down clean argo-credentials grafana-credentials
 
 help: ## List available targets
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -84,6 +84,9 @@ argo-init: ## First install pass: Argo CD and its CRDs, without the Applications
 argo: ## Install/upgrade the bootstrap layer (Argo CD + App of Apps)
 	$(HELM_ARGO)
 
+argo-credentials: ## Get the argo init credentials
+	$(KUBECTL) get secret -n argo argocd-initial-admin-secret -ojson | jq '.data.password | @base64d' -r
+
 wait-traefik: ## Block until Argo CD has synced Traefik (the ingress path)
 	@echo "waiting for Argo CD to sync Traefik (CRD ingressroutes.traefik.io)..."
 	@for i in $$(seq 1 120); do \
@@ -107,3 +110,6 @@ down: ## Delete the cluster and stop the host proxy
 clean: down ## Alias for `down`, plus the vendored chart dependencies
 	find . -name 'Chart.lock' -delete
 	find . -path '*/charts/*.tgz' -delete
+
+grafana-credentials: ## Get Grafana admin credentials
+	$(KUBECTL) get secret -n grafana grafana -oyaml | yq '.data["admin-password"] | @base64d'

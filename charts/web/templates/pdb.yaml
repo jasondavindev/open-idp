@@ -1,0 +1,23 @@
+{{- $pdb := default dict .Values.pdb -}}
+{{- if and (get $pdb "minAvailable") (get $pdb "maxUnavailable") -}}
+{{- fail "Both minAvailable and maxUnavailable cannot be set" -}}
+{{- end -}}
+{{- if $pdb }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "web.fullname" . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+  labels:
+    {{- include "web.labels" . | nindent 4 }}
+spec:
+  {{- if get $pdb "minAvailable" }}
+  minAvailable: {{ get $pdb "minAvailable" }}
+  {{- else }}
+  maxUnavailable: {{ default 1 (get $pdb "maxUnavailable") }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "web.selectorLabels" . | nindent 6 }}
+{{- end }}

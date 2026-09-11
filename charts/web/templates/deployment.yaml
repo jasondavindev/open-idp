@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "web.fullname" . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  labels:
+    {{- include "web.labels" . | nindent 4 }}
+spec:
+  progressDeadlineSeconds: 60
+
+  {{- if not .Values.scaling }}
+  replicas: 1
+  {{- end }}
+
+  revisionHistoryLimit: 3
+
+  selector:
+    matchLabels:
+      {{- include "web.selectorLabels" . | nindent 6 }}
+
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+    type: RollingUpdate
+
+  template:
+    metadata:
+      labels:
+        {{- include "web.labels" . | nindent 8 }}
+
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: IfNotPresent
+
+          {{- if .Values.command }}
+          command:
+          {{- range $i, $cmd := .Values.command }}
+          {{- if eq $i 1 }}
+          args:
+          {{- end }}
+            - {{ . | quote }}
+          {{- end }}
+          {{- end }}
+
+          env:
+            - name: PORT
+              value: {{ .Values.port | quote }}
+            {{- range $k, $v := .Values.env }}
+            - name: {{ $k | quote }}
+              value: {{ $v | quote }}
+            {{- end }}
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+
+          livenessProbe:
+            {{ include "web.probes" .Values.livenessProbe | nindent 12 }}
+
+          readinessProbe:
+            {{ include "web.probes" .Values.readinessProbe | nindent 12 }}
+
+          startupProbe:
+            {{ include "web.probes" .Values.startupProbe | nindent 12 }}
+
+          resources:
+            limits:
+              memory: {{ .Values.memory }}
+            requests:
+              cpu: {{ .Values.cpu | default "100m" }}
+              memory: {{ .Values.memory }}
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+              - CHOWN
+              - NET_BIND_SERVICE
+              - SETGID
+              - SETUID
+              drop:
+              - all
+
+      enableServiceLinks: false
+      serviceAccountName: {{ .Release.Name }}
+      terminationGracePeriodSeconds: 60
+
+      # high availability
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            {{- include "web.selectorLabels" . | nindent 12 }}

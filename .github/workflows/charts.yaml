@@ -1,0 +1,37 @@
+name: charts
+on:
+  push:
+    branches:
+      - main
+      - pipe
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      CONTAINER_REGISTRY: registry-1.docker.io
+    strategy:
+      fail-fast: false
+      matrix:
+        chart:
+          - app
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: helm dep build
+        run: |
+          cd "charts/${{ matrix.chart }}"
+          helm dep build
+
+      - name: helm package
+        run: |
+          cd "charts/${{ matrix.chart }}"
+          helm package .
+
+      - name: helm push
+        run: |
+          echo "${{ secrets.HELM_REGISTRY_PASSWORD }}" | helm registry login -u ${{ secrets.HELM_REGISTRY_USER }} --password-stdin ${{ env.CONTAINER_REGISTRY }}
+          cd "charts/${{ matrix.chart }}"
+          helm push ${{ matrix.chart }}*.tgz oci://${{ env.CONTAINER_REGISTRY }}
