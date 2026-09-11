@@ -12,7 +12,7 @@ Git is the single source of truth: everything that runs in the cluster is declar
 | --- | --- |
 | [`00-core/`](00-core/) | Bootstrap layer, installed manually. Today it holds Argo CD and the App of Apps declaration. |
 | [`01-applications/`](01-applications/) | One folder per workload, each a Helm chart. Argo CD syncs these automatically. |
-| [`charts/`](charts/) | Local reusable charts. See [`argocd-app-of-apps`](charts/argocd-app-of-apps/README.md). |
+| [`charts/`](charts/) | Local reusable charts, consumed by path (`file://`). See [Local charts](#local-charts). |
 | [`00-local/`](00-local/) | Everything that lives outside the cluster: the [KinD cluster declaration](00-local/kind/cluster.yaml) and the host nginx reverse proxy. |
 | [`Makefile`](Makefile) | Wraps cluster creation, chart dependencies, the Argo CD install and the host proxy into `make bootstrap`. |
 
@@ -26,6 +26,28 @@ Vendored chart dependencies (`**/charts/*.tgz`) and `Chart.lock` files are git-i
 4. Adding a workload = a new folder in `01-applications/` plus one line in [`00-core/argo/values.yaml`](00-core/argo/values.yaml). No `kubectl apply`.
 
 Application-specific parameters are documented in the [chart README](charts/argocd-app-of-apps/README.md).
+
+## Local charts
+
+Reusable charts kept in this repository. The shared Argo CD sync-wave convention
+they all follow is documented in [`charts/README.md`](charts/README.md).
+
+| Chart | Version | Purpose | Distribution | Reference |
+| --- | --- | --- | --- | --- |
+| [`argocd-app-of-apps`](charts/argocd-app-of-apps/) | 0.1.0 | Renders one `AppProject` + one `Application` per entry in `applications`, pointing at `01-applications/<name>`. The entry point of the whole GitOps flow. | By path only — a subchart of [`00-core/argo`](00-core/argo/), aliased `app-of-apps` | [README](charts/argocd-app-of-apps/README.md) |
+| [`web`](charts/web/) | 1.0.0 | Generic HTTP workload: `Deployment`, `ClusterIP` `Service`, Traefik `IngressRoute`, `ServiceAccount`, plus optional `HorizontalPodAutoscaler` and `PodDisruptionBudget`. | Published as an OCI chart (see below); not consumed by any application in this repository yet | [README](charts/web/README.md) |
+
+### Publishing
+
+[`.github/workflows/charts.yaml`](.github/workflows/charts.yaml) runs on every push to `main`
+that touches `charts/**`. For each chart in its `matrix.chart` list (today: `web`) it runs
+`helm dep build`, `helm package` and `helm push` to `oci://registry-1.docker.io/<HELM_REGISTRY_USER>`
+(today [`jasoncarneiro`](https://hub.docker.com/u/jasoncarneiro)), authenticating with the
+`HELM_REGISTRY_USER` / `HELM_REGISTRY_PASSWORD` repository secrets.
+
+The version pushed is the `version` field of the chart's `Chart.yaml` — bump it in the same
+commit, otherwise the push overwrites the existing tag. Charts absent from the matrix
+(`argocd-app-of-apps`) are never packaged and stay path-only.
 
 ## Platform components
 
