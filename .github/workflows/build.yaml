@@ -18,7 +18,6 @@ on:
 
 jobs:
   build:
-    needs: build
     runs-on: ubuntu-latest
     env:
       CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}
