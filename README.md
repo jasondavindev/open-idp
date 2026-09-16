@@ -49,6 +49,38 @@ The version pushed is the `version` field of the chart's `Chart.yaml` — bump i
 commit, otherwise the push overwrites the existing tag. Charts absent from the matrix
 (`argocd-app-of-apps`) are never packaged and stay path-only.
 
+## Reusable workflows
+
+Two `workflow_call` workflows in [`.github/workflows/`](.github/workflows/) are published for
+application repositories to consume as CI/CD building blocks — they are never triggered directly
+in this repository.
+
+| Workflow | Purpose | Inputs | Secrets | Outputs |
+| --- | --- | --- | --- | --- |
+| [`build.yaml`](.github/workflows/build.yaml) | Builds the calling repo's `Dockerfile` with `docker buildx`, using a registry-backed cache (`<image>:cache`), and pushes the image tagged with the commit SHA. | — | `CONTAINER_REGISTRY`, `REGISTRY_USER`, `REGISTRY_PASSWORD` | `full_image_name`, `image_tag` |
+| [`deploy.yaml`](.github/workflows/deploy.yaml) | Sets `global.image.tag` to the given `image_tag` in the calling repo's `.idp/<app_name>/values.yaml`, then commits (`[skip ci]`) and force-pushes back to the triggering branch. No-ops if the file is already up to date. | `image_tag` (required) | — (uses `contents: write` on the default token) | — |
+
+`<app_name>` is derived from the calling repository's name (the part of `GITHUB_REPOSITORY` after
+the `/`), and `deploy.yaml` requires `.idp/<app_name>/values.yaml` to already exist in that repo.
+
+Typical caller, in an application repository:
+
+```yaml
+jobs:
+  build:
+    uses: jasondavindev/open-idp/.github/workflows/build.yaml@main
+    secrets:
+      CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}
+      REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+
+  deploy:
+    needs: build
+    uses: jasondavindev/open-idp/.github/workflows/deploy.yaml@main
+    with:
+      image_tag: ${{ needs.build.outputs.image_tag }}
+```
+
 ## Platform components
 
 | Component | Chart | Managed by | Purpose |
