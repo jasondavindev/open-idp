@@ -21,13 +21,13 @@ jobs:
       - name: prepare
         id: prepare
         shell: bash
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
           set -euo pipefail
 
           APP_NAME="$(echo "${GITHUB_REPOSITORY}" | cut -d / -f 2)"
-
           VALUES_FILE=".idp/${APP_NAME}/values.yaml"
-          IMAGE_TAG="${{ inputs.image_tag }}"
 
           if [[ ! -f "${VALUES_FILE}" ]]; then
               echo "values file not found: ${VALUES_FILE}"
@@ -40,7 +40,7 @@ jobs:
           fi
 
           yq -i \
-              '.global.image.tag = strenv(IMAGE_TAG) | .image.tag style="double"' \
+              '.global.image.tag = strenv(IMAGE_TAG)' \
               "${VALUES_FILE}"
 
           if git diff --quiet -- "${VALUES_FILE}"; then
