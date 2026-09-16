@@ -16,4 +16,4 @@ dependencies:
   - name: argocd-app-of-apps
     version: 0.1.0
     repository: file://../../charts/argocd-app-of-apps
-    alias: custom-apps
+    alias: idp-apps

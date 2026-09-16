@@ -20,10 +20,11 @@ Vendored chart dependencies (`**/charts/*.tgz`) and `Chart.lock` files are git-i
 
 ## How the GitOps flow works
 
-1. `00-core/argo` is installed manually with Helm. It bundles the upstream `argo-cd` chart plus the local `argocd-app-of-apps` chart.
-2. `argocd-app-of-apps` renders, for each entry in its `applications` map, an `AppProject` and an `Application` pointing at `01-applications/<name>`.
-3. Argo CD syncs each application (auto-sync with prune and self-heal), creating its namespace on the fly.
-4. Adding a workload = a new folder in `01-applications/` plus one line in [`00-core/argo/values.yaml`](00-core/argo/values.yaml). No `kubectl apply`.
+1. `00-core/argo` is installed manually with Helm. It bundles the upstream `argo-cd` chart plus two instances of the local `argocd-app-of-apps` chart: `app-of-apps` for platform components and `idp-apps` for developer applications.
+2. `app-of-apps` renders, for each entry in its `applications` map, an `AppProject` and an `Application` pointing at `01-applications/<name>` in this repository — the platform components listed below.
+3. `idp-apps` does the same, but pointing at `apps/<name>` in the [`open-idp-apps`](https://github.com/jasondavindev/open-idp-apps) catalog repository — one entry per developer application registered through the [`deploy.yaml`](.github/workflows/deploy.yaml) reusable workflow (see [Reusable workflows](#reusable-workflows)).
+4. Argo CD syncs each application (auto-sync with prune and self-heal), creating its namespace on the fly.
+5. Adding a platform workload = a new folder in `01-applications/` plus one line in [`00-core/argo/values.yaml`](00-core/argo/values.yaml). Registering a developer application = wiring its CI to `deploy.yaml`, which commits it into `open-idp-apps` automatically. No `kubectl apply` either way.
 
 Application-specific parameters are documented in the [chart README](charts/argocd-app-of-apps/README.md).
 
@@ -58,10 +59,12 @@ in this repository.
 | Workflow | Purpose | Inputs | Secrets | Outputs |
 | --- | --- | --- | --- | --- |
 | [`build.yaml`](.github/workflows/build.yaml) | Builds the calling repo's `Dockerfile` with `docker buildx`, using a registry-backed cache (`<image>:cache`), and pushes the image tagged with the commit SHA. | — | `CONTAINER_REGISTRY`, `REGISTRY_USER`, `REGISTRY_PASSWORD` | `full_image_name`, `image_tag` |
-| [`deploy.yaml`](.github/workflows/deploy.yaml) | Sets `global.image.tag` to the given `image_tag` in the calling repo's `.idp/<app_name>/values.yaml`, then commits (`[skip ci]`) and force-pushes back to the triggering branch. No-ops if the file is already up to date. | `image_tag` (required) | — (uses `contents: write` on the default token) | — |
+| [`deploy.yaml`](.github/workflows/deploy.yaml) | Copies the calling repo's `.idp/` manifests into the [`open-idp-apps`](https://github.com/jasondavindev/open-idp-apps) catalog repository (`apps/<app_name>/`), sets `global.image.tag` to the given `image_tag` in its `values.yaml`, then commits (`[skip ci]`) and force-pushes to the catalog repo's `main`. This is what registers the app under `idp-apps` in Argo CD — see [How the GitOps flow works](#how-the-gitops-flow-works). No-ops if the file is already up to date. | `image_tag` (required) | `pat_write_token` — a PAT with `contents: write` on `open-idp-apps` | — |
 
 `<app_name>` is derived from the calling repository's name (the part of `GITHUB_REPOSITORY` after
-the `/`), and `deploy.yaml` requires `.idp/<app_name>/values.yaml` to already exist in that repo.
+the `/`), and `deploy.yaml` requires `.idp/values.yaml` to already exist in that repo, plus a
+matching `apps/<app_name>/` folder and `idp-apps.applications` entry already present in
+`open-idp-apps` / [`00-core/argo/values.yaml`](00-core/argo/values.yaml).
 
 Typical caller, in an application repository:
 
@@ -79,6 +82,8 @@ jobs:
     uses: jasondavindev/open-idp/.github/workflows/deploy.yaml@main
     with:
       image_tag: ${{ needs.build.outputs.image_tag }}
+    secrets:
+      pat_write_token: ${{ secrets.OPEN_IDP_APPS_TOKEN }}
 ```
 
 ## Platform components

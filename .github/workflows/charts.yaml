@@ -16,6 +16,7 @@ jobs:
       matrix:
         chart:
           - web
+          - argocd-app-of-apps
     steps:
       - uses: actions/checkout@v7
         with:
