@@ -10,10 +10,10 @@ on:
         required: true
     outputs:
       full_image_name:
-        value: ${{ jobs.prepare.outputs.full_image_name }}
+        value: ${{ jobs.build.outputs.full_image_name }}
         description: The full image name - registry + tag
       image_tag:
-        value: ${{ jobs.prepare.outputs.image_tag }}
+        value: ${{ jobs.build.outputs.image_tag }}
         description: The image tag to release a new deploy
 
 jobs:
@@ -21,6 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}
+    outputs:
+      full_image_name: ${{ steps.prepare.outputs.full_image_name }}
+      image_tag: ${{ steps.prepare.outputs.image_tag }}  
     steps:
       - name: prepare
         id: prepare
