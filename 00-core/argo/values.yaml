@@ -39,9 +39,9 @@ app-of-apps:
     grafana: {}
     otel: {}
 
-custom-apps:
-  repository: https://github.com/jasondavindev/safplatform.git
-  pathPrefix: .idp
+idp-apps:
+  repository: https://github.com/jasondavindev/open-idp-apps.git
+  pathPrefix: apps
   targetRevision: main
 
   applications:
