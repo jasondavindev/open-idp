@@ -6,6 +6,8 @@ Git is the single source of truth: everything that runs in the cluster is declar
 
 > **Current base:** a local [KinD](https://kind.sigs.k8s.io/) cluster running Kubernetes **v1.37.0**, declared in [`00-local/kind/cluster.yaml`](00-local/kind/cluster.yaml) and created by `make bootstrap`.
 
+![Deployment flow: GitHub Actions builds the image and updates the open-idp-apps catalog, Argo CD syncs it into one namespace per app, Traefik routes external traffic to them](docs/architecture.svg)
+
 ## Repository layout
 
 | Path | Purpose |
