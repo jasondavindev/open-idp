@@ -106,6 +106,7 @@ jobs:
 | kubectl | 1.30+ | Skew against the v1.37 control plane is fine within two minors |
 | helm | 4.x | The bootstrap chart is installed with `helm upgrade --install` |
 | make | any | Only used to sequence the commands below |
+| yq | 4.x | Reads the chart dependencies the bootstrap pass has to disable |
 
 The host also needs a raised inotify budget — every KinD node runs its own
 systemd and kubelet, and the kernel defaults (128 instances) are not enough for
@@ -169,5 +170,5 @@ The cluster is now declared and reproducible. What is still open:
 - [x] Declare the KinD cluster (`00-local/kind/cluster.yaml`): node image pinned by digest, control-plane/worker topology, `extraPortMappings` for the Traefik entrypoint.
 - [x] Wrap cluster creation, `helm dependency build` and the Argo CD install into one reproducible command (`make bootstrap`).
 - [x] Document the host requirements.
-- [ ] Replace the hardcoded Elasticsearch endpoint in [`01-applications/otel/values.yaml`](01-applications/otel/values.yaml) with the in-cluster service DNS name, so the collector config survives a cluster rebuild.
+- [x] Replace the hardcoded Elasticsearch endpoint in [`01-applications/otel/values.yaml`](01-applications/otel/values.yaml) with the in-cluster service DNS name, so the collector config survives a cluster rebuild.
 - [ ] Persist Elasticsearch data across `make down` (KinD `extraMounts` plus a `hostPath` volume), otherwise every rebuild starts from empty logs.

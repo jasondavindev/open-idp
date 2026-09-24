@@ -23,6 +23,10 @@ HELM_ARGO = helm upgrade --install argo $(ARGO_CHART) \
 	--namespace $(ARGO_NAMESPACE) --create-namespace \
 	--reset-values --wait --timeout 10m
 
+APP_OF_APPS_DEP = argocd-app-of-apps
+DISABLE_APP_OF_APPS = yq '.dependencies[] | select(.name == "$(APP_OF_APPS_DEP)") \
+	| "--set " + (.alias // .name) + ".applications=null"' $(ARGO_CHART)/Chart.yaml
+
 .DEFAULT_GOAL := help
 .PHONY: help bootstrap preflight cluster deps argo-init argo wait-traefik proxy status down clean argo-credentials grafana-credentials
 
@@ -71,15 +75,16 @@ cluster: preflight ## Create the KinD cluster (no-op if it already exists)
 	fi
 
 deps: ## Resolve the bootstrap chart dependencies
-	helm dependency build $(ARGO_CHART)
+	helm dep update $(ARGO_CHART)
 
 argo-init: ## First install pass: Argo CD and its CRDs, without the Applications
 	@if $(KUBECTL) get crd applications.argoproj.io >/dev/null 2>&1; then \
 		echo "Argo CD CRDs already present, skipping the bootstrap pass"; \
-	else \
-		echo "installing Argo CD without Applications (its CRDs do not exist yet)"; \
-		$(HELM_ARGO) --set app-of-apps.applications=null; \
-	fi
+		exit 0; \
+	fi; \
+	flags=$$($(DISABLE_APP_OF_APPS) | tr '\n' ' '); \
+	echo "installing Argo CD without Applications (its CRDs do not exist yet): $$flags"; \
+	$(HELM_ARGO) $$flags
 
 argo: ## Install/upgrade the bootstrap layer (Argo CD + App of Apps)
 	$(HELM_ARGO)

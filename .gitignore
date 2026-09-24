@@ -1,4 +1,4 @@
 **/charts/
 **/Chart.lock
-!charts/
-charts/**/*.tgz
+!./charts/
+./charts/**/*.tgz
