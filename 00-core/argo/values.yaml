@@ -28,7 +28,7 @@ argo:
   cm:
     kustomize.buildOptions: "--enable-helm"
 
-app-of-apps:
+internal-tools:
   repository: https://github.com/jasondavindev/open-idp.git
   pathPrefix: 01-applications
   targetRevision: main
@@ -39,7 +39,7 @@ app-of-apps:
     grafana: {}
     otel: {}
 
-idp-apps:
+developer-apps:
   repository: https://github.com/jasondavindev/open-idp-apps.git
   pathPrefix: apps
   targetRevision: main

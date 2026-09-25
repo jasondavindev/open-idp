@@ -22,9 +22,9 @@ Vendored chart dependencies (`**/charts/*.tgz`) and `Chart.lock` files are git-i
 
 ## How the GitOps flow works
 
-1. `00-core/argo` is installed manually with Helm. It bundles the upstream `argo-cd` chart plus two instances of the local `argocd-app-of-apps` chart: `app-of-apps` for platform components and `idp-apps` for developer applications.
-2. `app-of-apps` renders, for each entry in its `applications` map, an `AppProject` and an `Application` pointing at `01-applications/<name>` in this repository — the platform components listed below.
-3. `idp-apps` does the same, but pointing at `apps/<name>` in the [`open-idp-apps`](https://github.com/jasondavindev/open-idp-apps) catalog repository — one entry per developer application registered through the [`deploy.yaml`](.github/workflows/deploy.yaml) reusable workflow (see [Reusable workflows](#reusable-workflows)).
+1. `00-core/argo` is installed manually with Helm. It bundles the upstream `argo-cd` chart plus two instances of the local `argocd-app-of-apps` chart: `internal-tools` for platform components and `developer-apps` for developer applications.
+2. `internal-tools` renders, for each entry in its `applications` map, an `AppProject` and an `Application` pointing at `01-applications/<name>` in this repository — the platform components listed below.
+3. `developer-apps` does the same, but pointing at `apps/<name>` in the [`open-idp-apps`](https://github.com/jasondavindev/open-idp-apps) catalog repository — one entry per developer application registered through the [`deploy.yaml`](.github/workflows/deploy.yaml) reusable workflow (see [Reusable workflows](#reusable-workflows)).
 4. Argo CD syncs each application (auto-sync with prune and self-heal), creating its namespace on the fly.
 5. Adding a platform workload = a new folder in `01-applications/` plus one line in [`00-core/argo/values.yaml`](00-core/argo/values.yaml). Registering a developer application = wiring its CI to `deploy.yaml`, which commits it into `open-idp-apps` automatically. No `kubectl apply` either way.
 
@@ -37,7 +37,7 @@ they all follow is documented in [`charts/README.md`](charts/README.md).
 
 | Chart | Version | Purpose | Distribution | Reference |
 | --- | --- | --- | --- | --- |
-| [`argocd-app-of-apps`](charts/argocd-app-of-apps/) | 0.1.0 | Renders one `AppProject` + one `Application` per entry in `applications`, pointing at `01-applications/<name>`. The entry point of the whole GitOps flow. | By path only — a subchart of [`00-core/argo`](00-core/argo/), aliased `app-of-apps` | [README](charts/argocd-app-of-apps/README.md) |
+| [`argocd-app-of-apps`](charts/argocd-app-of-apps/) | 0.1.0 | Renders one `AppProject` + one `Application` per entry in `applications`, pointing at `01-applications/<name>`. The entry point of the whole GitOps flow. | By path only — a subchart of [`00-core/argo`](00-core/argo/), aliased `internal-tools` | [README](charts/argocd-app-of-apps/README.md) |
 | [`web`](charts/web/) | 1.0.0 | Generic HTTP workload: `Deployment`, `ClusterIP` `Service`, Traefik `IngressRoute`, `ServiceAccount`, plus optional `HorizontalPodAutoscaler` and `PodDisruptionBudget`. | Published as an OCI chart (see below); not consumed by any application in this repository yet | [README](charts/web/README.md) |
 
 ### Publishing
@@ -61,11 +61,11 @@ in this repository.
 | Workflow | Purpose | Inputs | Secrets | Outputs |
 | --- | --- | --- | --- | --- |
 | [`build.yaml`](.github/workflows/build.yaml) | Builds the calling repo's `Dockerfile` with `docker buildx`, using a registry-backed cache (`<image>:cache`), and pushes the image tagged with the commit SHA. | — | `CONTAINER_REGISTRY`, `REGISTRY_USER`, `REGISTRY_PASSWORD` | `full_image_name`, `image_tag` |
-| [`deploy.yaml`](.github/workflows/deploy.yaml) | Copies the calling repo's `.idp/` manifests into the [`open-idp-apps`](https://github.com/jasondavindev/open-idp-apps) catalog repository (`apps/<app_name>/`), sets `global.image.tag` to the given `image_tag` in its `values.yaml`, then commits (`[skip ci]`) and force-pushes to the catalog repo's `main`. This is what registers the app under `idp-apps` in Argo CD — see [How the GitOps flow works](#how-the-gitops-flow-works). No-ops if the file is already up to date. | `image_tag` (required) | `pat_write_token` — a PAT with `contents: write` on `open-idp-apps` | — |
+| [`deploy.yaml`](.github/workflows/deploy.yaml) | Copies the calling repo's `.idp/` manifests into the [`open-idp-apps`](https://github.com/jasondavindev/open-idp-apps) catalog repository (`apps/<app_name>/`), sets `global.image.tag` to the given `image_tag` in its `values.yaml`, then commits (`[skip ci]`) and force-pushes to the catalog repo's `main`. This is what registers the app under `developer-apps` in Argo CD — see [How the GitOps flow works](#how-the-gitops-flow-works). No-ops if the file is already up to date. | `image_tag` (required) | `pat_write_token` — a PAT with `contents: write` on `open-idp-apps` | — |
 
 `<app_name>` is derived from the calling repository's name (the part of `GITHUB_REPOSITORY` after
 the `/`), and `deploy.yaml` requires `.idp/values.yaml` to already exist in that repo, plus a
-matching `apps/<app_name>/` folder and `idp-apps.applications` entry already present in
+matching `apps/<app_name>/` folder and `developer-apps.applications` entry already present in
 `open-idp-apps` / [`00-core/argo/values.yaml`](00-core/argo/values.yaml).
 
 Typical caller, in an application repository:

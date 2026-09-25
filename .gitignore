@@ -2,3 +2,4 @@
 **/Chart.lock
 !./charts/
 ./charts/**/*.tgz
+architecture.gen.py

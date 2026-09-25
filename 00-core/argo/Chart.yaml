@@ -12,8 +12,8 @@ dependencies:
   - name: argocd-app-of-apps
     version: 0.1.0
     repository: file://../../charts/argocd-app-of-apps
-    alias: app-of-apps
+    alias: internal-tools
   - name: argocd-app-of-apps
     version: 0.1.0
     repository: file://../../charts/argocd-app-of-apps
-    alias: idp-apps
+    alias: developer-apps
